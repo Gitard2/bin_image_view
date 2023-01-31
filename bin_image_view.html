@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Просмотр бинарного файла</title>
+<meta charset="utf-8">
+<style>
+canvas {
+	border:1px solid;
+}
+</style>
+</head>
+<body>
+Формат
+<select id='format_pix'>
+<option value="rgba8888">R8G8B8A8</option>
+<option value="bgra8888">B8G8R8A8</option>
+<option value="rgb888">R8G8B8</option>
+<option value="bgr888">B8G8R8</option>
+<option value="r8">L8</option>
+<option value="rgba4444">R4G4B4A4</option>
+<option value="bgra4444">B4G4R4A4</option>
+<option value="rgba5551">R5G5B5A1</option>
+<option value="bgra5551">B5G5R5A1</option>
+<option value="rgb565">R5G6B5</option>
+<option value="bgr565">B5G6R5</option>
+<option value="rgb233">R2G3B3</option>
+</select>
+<input type="file" id='upload'>
+<br>
+Ширина
+<input id='width_input' size='2' title=''>
+<button id='width_minus'>-</button>
+<button id='width_plus'>+</button>
+<button id='width_10minus'>-10</button>
+<button id='width_10plus'>+10</button>
+<button id='width_minus_for2'>/2</button>
+<button id='width_plus_for2'>*2</button>
+Высота
+<input id='height_input' size='2' title=''>
+<button id='height_minus'>-</button>
+<button id='height_plus'>+</button>
+<button id='height_10minus'>-10</button>
+<button id='height_10plus'>+10</button>
+<button id='height_minus_for2'>/2</button>
+<button id='height_plus_for2'>*2</button>
+<br>
+Смещение
+<input id='offset_input' size='10' title=''>
+<button id='offset_clear'>c</button>
+<button id='offset_minus'>-b</button>
+<button id='offset_plus'>+b</button>
+<button id='offset_minus_pix'>-p</button>
+<button id='offset_plus_pix'>+p</button>
+<button id='offset_minus_10pix'>-10p</button>
+<button id='offset_plus_10pix'>+10p</button>
+<button id='offset_minus_wpix'>-w</button>
+<button id='offset_plus_wpix'>+w</button>
+<button id='offset_minus_10wpix'>-10w</button>
+<button id='offset_plus_10wpix'>+10w</button>
+<button id='offset_minus_hpix'>-h</button>
+<button id='offset_plus_hpix'>+h</button>
+<br>
+<canvas id='canvas'></canvas>
+<script>
+let context = canvas.getContext('2d');
+let buff, data, imgd, pix;
+let mouseX, mouseY, isDragging;
+let bpp;
+let width = 512, height = 512, offset = 0;
+width_input.value = width;
+height_input.value = height;
+offset_input.value = offset;
+
+draw();
+
+let pix_metod = {
+	rgba8888: function()
+	{
+		bpp = 4;
+		pix.set(data.subarray(offset, offset + pix.length));
+	},
+	
+	bgra8888: function()
+	{
+		bpp = 4;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 4)
+		{
+			pix[i++] = data[j + 2];
+			pix[i++] = data[j + 1];
+			pix[i++] = data[j];
+			pix[i++] = data[j + 3];
+		}
+	},
+	
+	rgb888: function()
+	{
+		bpp = 3;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
+		{
+			pix[i++] = data[j];
+			pix[i++] = data[j + 1];
+			pix[i++] = data[j + 2];
+			pix[i++] = 255;
+		}
+	},
+	
+	bgr888: function()
+	{
+		bpp = 3;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
+		{
+			pix[i++] = data[j + 2];
+			pix[i++] = data[j + 1];
+			pix[i++] = data[j];
+			pix[i++] = 255;
+		}
+	},
+	
+	r8: function()
+	{
+		bpp = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = data[j];
+			pix[i++] = data[j];
+			pix[i++] = data[j];
+			pix[i++] = 255;
+		}
+	},
+	
+	rgba4444: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j] & 0x0F)/15;
+			pix[i++] = 255*(data[j] >>> 4)/15;
+			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
+			pix[i++] = 255*(data[j + 1] >>> 4)/15;
+		}
+	},
+	
+	bgra4444: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
+			pix[i++] = 255*(data[j] >>> 4)/15;
+			pix[i++] = 255*(data[j] & 0x0F)/15;
+			pix[i++] = 255*(data[j + 1] >>> 4)/15;
+		}
+	},
+	
+	rgba5551: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j] & 0x1F)/31;
+			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
+			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
+			pix[i++] = 255*(data[j + 1] >>> 7);
+		}
+	},
+	
+	bgra5551: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
+			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
+			pix[i++] = 255*(data[j] & 0x1F)/31;
+			pix[i++] = 255*(data[j + 1] >>> 7);
+		}
+	},
+	
+	rgb565: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j] & 0x1F)/31;
+			pix[i++] = 255*((data[j + 1] & 0x7) << 3 | data[j] >>> 5)/63;
+			pix[i++] = 255*(data[j + 1] >>> 3)/31;
+			pix[i++] = 255;
+		}
+	},
+	
+	bgr565: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j + 1] >>> 3)/31;
+			pix[i++] = 255*((data[j + 1] & 0x7) << 3 | data[j] >>> 5)/63;
+			pix[i++] = 255*(data[j] & 0x1F)/31;
+			pix[i++] = 255;
+		}
+	},
+	
+	rgb233: function()
+	{
+		bpp = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] & 3)/3;
+			pix[i++] = 255*(data[j] >> 2 & 7)/7;
+			pix[i++] = 255*(data[j] >> 5 & 7)/7;
+			pix[i++] = 255;
+		}
+	},
+};
+
+function draw()
+{
+	canvas.width = width;
+	canvas.height = height;
+	context.fillStyle = "black";
+	context.fillRect(0, 0, width, height);
+	if (buff)
+	{
+		imgd = context.getImageData(0, 0, canvas.width, canvas.height);
+		pix = imgd.data;
+		pix_metod[format_pix.value]();
+		context.putImageData(imgd, 0, 0);
+	}
+}
+
+upload.onchange = function()
+{
+	let file = upload.files[0];
+	if (file)
+	{
+		let reader = new FileReader();
+		reader.readAsArrayBuffer(file);
+		reader.onload = function()
+		{
+			buff = reader.result;
+			data = new Uint8Array(buff);
+			draw();
+		}
+	}
+}
+
+width_input.oninput = function()
+{
+	if (width_input.value > 0)
+		width = +width_input.value;
+	
+	draw();
+}
+
+width_minus.onclick = function()
+{
+	if (width > 0)
+	{
+		width--;
+		width_input.value = width;
+		
+		draw();
+	}
+}
+
+width_plus.onclick = function()
+{
+	width++;
+	width_input.value = width;
+	
+	draw();
+}
+
+width_10minus.onclick = function()
+{
+	if (width > 10)
+	{
+		width -= 10;
+		width_input.value = width;
+		
+		draw();
+	}
+}
+
+width_10plus.onclick = function()
+{
+	width += 10;
+	width_input.value = width;
+	
+	draw();
+}
+
+width_minus_for2.onclick = function()
+{
+	let num = 2;
+	while (width > num)
+		num *= 2;
+	
+	if (width > 0)
+	{
+		width = num/2;
+		width_input.value = width;
+		
+		draw();
+	}
+}
+
+width_plus_for2.onclick = function()
+{
+	let num = 2;
+	while (width >= num)
+		num *= 2;
+	
+	width = num;
+	width_input.value = width;
+	
+	draw();
+}
+
+height_input.oninput = function()
+{
+	if (height_input.value > 0)
+		height = +height_input.value;
+	
+	draw();
+}
+
+height_minus.onclick = function()
+{
+	if (height > 0)
+	{
+		height--;
+		height_input.value = height;
+		
+		draw();
+	}
+}
+
+height_plus.onclick = function()
+{
+	height++;
+	height_input.value = height;
+	
+	draw();
+}
+
+height_10minus.onclick = function()
+{
+	if (height > 10)
+	{
+		height -= 10;
+		height_input.value = height;
+		
+		draw();
+	}
+}
+
+height_10plus.onclick = function()
+{
+	height += 10;
+	height_input.value = height;
+	
+	draw();
+}
+
+height_minus_for2.onclick = function()
+{
+	let num = 2;
+	while (height > num)
+		num *= 2;
+	
+	if (height > 0)
+	{
+		height = num/2;
+		height_input.value = height;
+		
+		draw();
+	}
+}
+
+height_plus_for2.onclick = function()
+{
+	let num = 2;
+	while (height >= num)
+		num *= 2;
+	
+	height = num;
+	height_input.value = height;
+	
+	draw();
+}
+
+offset_input.oninput = function()
+{
+	if (offset_input.value >= 0)
+		offset = +offset_input.value;
+	
+	draw();
+}
+
+offset_clear.onclick = function()
+{
+	offset = 0;
+	offset_input.value = offset;
+	
+	draw();
+}
+
+offset_minus.onclick = function()
+{
+	if (offset > 0)
+	{
+		offset--;
+		offset_input.value = offset;
+		
+		draw();
+	}
+}
+
+offset_plus.onclick = function()
+{
+	offset++;
+	offset_input.value = offset;
+	
+	draw();
+}
+
+offset_minus_pix.onclick = function()
+{
+	if (offset >= bpp)
+	{
+		offset -= bpp;
+		offset_input.value = offset;
+		
+		draw();
+	}
+}
+
+offset_plus_pix.onclick = function()
+{
+	offset += bpp;
+	offset_input.value = offset;
+	
+	draw();
+}
+
+offset_minus_10pix.onclick = function()
+{
+	if (offset >= 10*bpp)
+	{
+		offset -= 10*bpp;
+		offset_input.value = offset;
+		
+		draw();
+	}
+}
+
+offset_plus_10pix.onclick = function()
+{
+	offset += 10*bpp;
+	offset_input.value = offset;
+	
+	draw();
+}
+
+offset_minus_wpix.onclick = function()
+{
+	if (offset >= bpp*width)
+	{
+		offset -= bpp*width;
+		offset_input.value = offset;
+		
+		draw();
+	}
+}
+
+offset_plus_wpix.onclick = function()
+{
+	offset += bpp*width;
+	offset_input.value = offset;
+	
+	draw();
+}
+
+offset_minus_10wpix.onclick = function()
+{
+	if (offset >= 10*bpp*width)
+	{
+		offset -= 10*bpp*width;
+		offset_input.value = offset;
+		
+		draw();
+	}
+}
+
+offset_plus_10wpix.onclick = function()
+{
+	offset += 10*bpp*width;
+	offset_input.value = offset;
+	
+	draw();
+}
+
+offset_minus_hpix.onclick = function()
+{
+	if (offset >= bpp*width*height)
+	{
+		offset -= bpp*width*height;
+		offset_input.value = offset;
+		
+		draw();
+	}
+}
+
+offset_plus_hpix.onclick = function()
+{
+	offset += bpp*width*height;
+	offset_input.value = offset;
+	
+	draw();
+}
+
+// События кнопок мыши
+canvas.onmousedown = function(event) {
+	if (event.which == 1) {
+		isDragging = true;
+		mouseX = event.pageX - canvas.offsetLeft;
+		mouseY = event.pageY - canvas.offsetTop;
+	}
+}
+
+window.onmouseup = function(event) {
+	isDragging = false;
+}
+
+// События перемещения мыши
+window.onmousemove = function(event) {
+	if (isDragging) {
+		let x = event.pageX - canvas.offsetLeft;
+		let y = event.pageY - canvas.offsetTop;
+		let dx = mouseX - x;
+		let dy = mouseY - y;
+		let doff = bpp*(dx + dy*width);
+		
+		if (offset >= -doff)
+			offset += doff;
+		else if (offset >= -bpp*dx)
+			offset += bpp*dx;
+		
+		offset_input.value = offset;
+		
+		mouseX = x;
+		mouseY = y;
+		
+		draw();
+	}
+}
+
+format_pix.onchange = function()
+{
+	draw();
+}
+
+</script>
+</body>
+</html>

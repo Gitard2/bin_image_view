@@ -71,9 +71,22 @@ width_input.value = width;
 height_input.value = height;
 offset_input.value = offset;
 
-draw();
+resize();
+//context.fillStyle = "black";
+//context.fillRect(0, 0, width, height);
 
 let pix_metod = {
+	clear: function()
+	{
+		for (let i = 0; i < pix.length;)
+		{
+			pix[i++] = 0;
+			pix[i++] = 0;
+			pix[i++] = 0;
+			pix[i++] = 255;
+		}
+	},
+	
 	rgba8888: function()
 	{
 		bpp = 4;
@@ -213,16 +226,19 @@ let pix_metod = {
 	},
 };
 
-function draw()
+function resize()
 {
 	canvas.width = width;
 	canvas.height = height;
-	context.fillStyle = "black";
-	context.fillRect(0, 0, width, height);
+	imgd = context.getImageData(0, 0, canvas.width, canvas.height);
+	pix = imgd.data;
+}
+
+function draw()
+{
 	if (buff)
 	{
-		imgd = context.getImageData(0, 0, canvas.width, canvas.height);
-		pix = imgd.data;
+		pix_metod.clear();
 		pix_metod[format_pix.value]();
 		context.putImageData(imgd, 0, 0);
 	}
@@ -239,6 +255,7 @@ upload.onchange = function()
 		{
 			buff = reader.result;
 			data = new Uint8Array(buff);
+			resize();
 			draw();
 		}
 	}
@@ -249,6 +266,7 @@ width_input.oninput = function()
 	if (width_input.value > 0)
 		width = +width_input.value;
 	
+	resize();
 	draw();
 }
 
@@ -259,6 +277,7 @@ width_minus.onclick = function()
 		width--;
 		width_input.value = width;
 		
+		resize();
 		draw();
 	}
 }
@@ -268,6 +287,7 @@ width_plus.onclick = function()
 	width++;
 	width_input.value = width;
 	
+	resize();
 	draw();
 }
 
@@ -278,6 +298,7 @@ width_10minus.onclick = function()
 		width -= 10;
 		width_input.value = width;
 		
+		resize();
 		draw();
 	}
 }
@@ -287,6 +308,7 @@ width_10plus.onclick = function()
 	width += 10;
 	width_input.value = width;
 	
+	resize();
 	draw();
 }
 
@@ -301,6 +323,7 @@ width_minus_for2.onclick = function()
 		width = num/2;
 		width_input.value = width;
 		
+		resize();
 		draw();
 	}
 }
@@ -314,6 +337,7 @@ width_plus_for2.onclick = function()
 	width = num;
 	width_input.value = width;
 	
+	resize();
 	draw();
 }
 
@@ -322,6 +346,7 @@ height_input.oninput = function()
 	if (height_input.value > 0)
 		height = +height_input.value;
 	
+	resize();
 	draw();
 }
 
@@ -332,6 +357,7 @@ height_minus.onclick = function()
 		height--;
 		height_input.value = height;
 		
+		resize();
 		draw();
 	}
 }
@@ -341,6 +367,7 @@ height_plus.onclick = function()
 	height++;
 	height_input.value = height;
 	
+	resize();
 	draw();
 }
 
@@ -351,6 +378,7 @@ height_10minus.onclick = function()
 		height -= 10;
 		height_input.value = height;
 		
+		resize();
 		draw();
 	}
 }
@@ -360,6 +388,7 @@ height_10plus.onclick = function()
 	height += 10;
 	height_input.value = height;
 	
+	resize();
 	draw();
 }
 
@@ -374,6 +403,7 @@ height_minus_for2.onclick = function()
 		height = num/2;
 		height_input.value = height;
 		
+		resize();
 		draw();
 	}
 }
@@ -387,6 +417,7 @@ height_plus_for2.onclick = function()
 	height = num;
 	height_input.value = height;
 	
+	resize();
 	draw();
 }
 

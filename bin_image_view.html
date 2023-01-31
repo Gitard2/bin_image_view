@@ -72,8 +72,6 @@ height_input.value = height;
 offset_input.value = offset;
 
 resize();
-//context.fillStyle = "black";
-//context.fillRect(0, 0, width, height);
 
 let pix_metod = {
 	clear: function()
@@ -573,10 +571,9 @@ window.onmousemove = function(event) {
 		let dy = mouseY - y;
 		let doff = bpp*(dx + dy*width);
 		
-		if (offset >= -doff)
-			offset += doff;
-		else if (offset >= -bpp*dx)
-			offset += bpp*dx;
+		offset += doff;
+		if (offset < 0)
+			offset = bpp*width + offset % (bpp*width);
 		
 		offset_input.value = offset;
 		

@@ -67,7 +67,7 @@ canvas {
 <canvas id='canvas'></canvas>
 <script>
 let context = canvas.getContext('2d');
-let buff, data, data2, imgd, pix;
+let buff, data, imgd, pix;
 let mouseX, mouseY, isDragging;
 let bpp;
 let width = 512, height = 512, offset = 0;
@@ -146,36 +146,36 @@ let pix_metod = {
 	r4_8: function()
 	{
 		bpp = 1;
-		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 1)
 		{
-			pix[i++] = 255*(data[j] & 0x0F)/15;
-			pix[i++] = 255*(data[j] & 0x0F)/15;
-			pix[i++] = 255*(data[j] & 0x0F)/15;
-			pix[i++] = 255;
+			pix[i] = 255*(data[j] & 0x0F)/15;
+			pix[i + 1] = pix[i];
+			pix[i + 2] = pix[i];
+			pix[i + 3] = 255;
 		}
 	},
 	
 	r16: function()
 	{
 		bpp = 2;
-		for (let i = 0, j = offset; i < pix.length && j < data2.length; j += 1)
+		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 2)
 		{
-			pix[i++] = data2[j]/255;
-			pix[i++] = data2[j]/255;
-			pix[i++] = data2[j]/255;
-			pix[i++] = 255;
+			pix[i] = (data[j + 1] << 8 | data[j])/255;
+			pix[i + 1] = pix[i];
+			pix[i + 2] = pix[i];
+			pix[i + 3] = 255;
 		}
 	},
 	
 	r10_16: function()
 	{
 		bpp = 2;
-		for (let i = 0, j = offset; i < pix.length && j < data2.length; j += 1)
+		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 2)
 		{
-			pix[i++] = data2[j]/4;
-			pix[i++] = data2[j]/4;
-			pix[i++] = data2[j]/4;
-			pix[i++] = 255;
+			pix[i] = (data[j + 1] << 8 | data[j])/4;
+			pix[i + 1] = pix[i];
+			pix[i + 2] = pix[i];
+			pix[i + 3] = 255;
 		}
 	},
 	
@@ -305,7 +305,6 @@ upload.onchange = function()
 		{
 			buff = reader.result;
 			data = new Uint8Array(buff);
-			data2 = new Uint16Array(buff);
 			resize();
 			draw();
 		}

@@ -18,6 +18,8 @@ canvas {
 <option value="bgr888">B8G8R8</option>
 <option value="r8">L8</option>
 <option value="r4_8">L4_8</option>
+<option value="r16">L16</option>
+<option value="r10_16">L10_16</option>
 <option value="rgba4444">R4G4B4A4</option>
 <option value="bgra4444">B4G4R4A4</option>
 <option value="rgba5551">R5G5B5A1</option>
@@ -65,7 +67,7 @@ canvas {
 <canvas id='canvas'></canvas>
 <script>
 let context = canvas.getContext('2d');
-let buff, data, imgd, pix;
+let buff, data, data2, imgd, pix;
 let mouseX, mouseY, isDragging;
 let bpp;
 let width = 512, height = 512, offset = 0;
@@ -149,6 +151,30 @@ let pix_metod = {
 			pix[i++] = 255*(data[j] & 0x0F)/15;
 			pix[i++] = 255*(data[j] & 0x0F)/15;
 			pix[i++] = 255*(data[j] & 0x0F)/15;
+			pix[i++] = 255;
+		}
+	},
+	
+	r16: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data2.length; j += 1)
+		{
+			pix[i++] = data2[j]/255;
+			pix[i++] = data2[j]/255;
+			pix[i++] = data2[j]/255;
+			pix[i++] = 255;
+		}
+	},
+	
+	r10_16: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data2.length; j += 1)
+		{
+			pix[i++] = data2[j]/4;
+			pix[i++] = data2[j]/4;
+			pix[i++] = data2[j]/4;
 			pix[i++] = 255;
 		}
 	},
@@ -279,6 +305,7 @@ upload.onchange = function()
 		{
 			buff = reader.result;
 			data = new Uint8Array(buff);
+			data2 = new Uint16Array(buff);
 			resize();
 			draw();
 		}
@@ -610,6 +637,7 @@ window.onmousemove = function(event) {
 	}
 }
 
+// События списков
 format_pix.onchange = function()
 {
 	draw();

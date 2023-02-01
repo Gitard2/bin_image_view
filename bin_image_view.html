@@ -37,22 +37,22 @@ canvas {
 <button id='width_plus'>+</button>
 <button id='width_10minus'>-10</button>
 <button id='width_10plus'>+10</button>
-<button id='width_minus_for2'>/2</button>
-<button id='width_plus_for2'>*2</button>
+<button id='width_minus_for2'>2↓</button>
+<button id='width_plus_for2'>2↑</button>
 Высота
 <input id='height_input' size='2' title=''>
 <button id='height_minus'>-</button>
 <button id='height_plus'>+</button>
 <button id='height_10minus'>-10</button>
 <button id='height_10plus'>+10</button>
-<button id='height_minus_for2'>/2</button>
-<button id='height_plus_for2'>*2</button>
+<button id='height_minus_for2'>2↓</button>
+<button id='height_plus_for2'>2↑</button>
 <br>
 Смещение
 <input id='offset_input' size='10' title=''>
 <button id='offset_clear'>c</button>
-<button id='offset_minus'>-b</button>
-<button id='offset_plus'>+b</button>
+<button id='offset_minus'>-</button>
+<button id='offset_plus'>+</button>
 <button id='offset_minus_pix'>-p</button>
 <button id='offset_plus_pix'>+p</button>
 <button id='offset_minus_10pix'>-10p</button>
@@ -305,7 +305,7 @@ upload.onchange = function()
 		{
 			buff = reader.result;
 			data = new Uint8Array(buff);
-			resize();
+			
 			draw();
 		}
 	}
@@ -616,7 +616,7 @@ window.onmouseup = function(event) {
 
 // События перемещения мыши
 window.onmousemove = function(event) {
-	if (isDragging) {
+	if (isDragging && buff) {
 		let x = event.pageX - canvas.offsetLeft;
 		let y = event.pageY - canvas.offsetTop;
 		let dx = mouseX - x;

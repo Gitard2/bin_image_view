@@ -11,7 +11,7 @@ canvas {
 </head>
 <body>
 
-Формат
+Формат:
 <select id='select_format_pix'>
 <option value="pix_32bit">32bit</option>
 <option value="pix_24bit">24bit</option>
@@ -22,6 +22,8 @@ canvas {
 <select id='select_format_pix_32bit'>
 <option value="rgba8888">R8G8B8A8</option>
 <option value="bgra8888">B8G8R8A8</option>
+<option value="rgb888_32">R8G8B8_32</option>
+<option value="bgr888_32">B8G8R8_32</option>
 </select>
 
 <select id='select_format_pix_24bit'>
@@ -36,6 +38,10 @@ canvas {
 <option value="bgra4444">B4G4R4A4</option>
 <option value="rgba5551">R5G5B5A1</option>
 <option value="bgra5551">B5G5R5A1</option>
+<option value="rgb444_16">R4G4B4_16</option>
+<option value="bgr444_16">B4G4R4_16</option>
+<option value="rgb555_16">R5G5B5_16</option>
+<option value="bgr555_16">B5G5R5_16</option>
 <option value="rgb565">R5G6B5</option>
 <option value="bgr565">B5G6R5</option>
 </select>
@@ -47,10 +53,11 @@ canvas {
 <option value="rgb222_8">R2G2B2_8</option>
 </select>
 
+Файл:
 <input type="file" id='upload'>
 <br>
 
-Ширина
+Ширина:
 <input id='width_input' size='2' title=''>
 
 <button id='width_minus'>-</button>
@@ -62,7 +69,7 @@ canvas {
 <button id='width_minus_deg_2'>2↓</button>
 <button id='width_plus_deg_2'>2↑</button>
 
-Высота
+Высота:
 <input id='height_input' size='2' title=''>
 
 <button id='height_minus'>-</button>
@@ -73,7 +80,7 @@ canvas {
 <button id='height_plus_deg_2'>2↑</button>
 <br>
 
-Смещение
+Смещение:
 <input id='offset_input' size='10' title=''>
 
 <button id='offset_clear'>c</button>
@@ -137,6 +144,30 @@ let pix_metod = {
 		}
 	},
 	
+	rgb888_32: function()
+	{
+		bpp = 4;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 4)
+		{
+			pix[i++] = data[j];
+			pix[i++] = data[j + 1];
+			pix[i++] = data[j + 2];
+			pix[i++] = 255;
+		}
+	},
+	
+	bgr888_32: function()
+	{
+		bpp = 4;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 4)
+		{
+			pix[i++] = data[j + 2];
+			pix[i++] = data[j + 1];
+			pix[i++] = data[j];
+			pix[i++] = 255;
+		}
+	},
+	
 	rgb888: function()
 	{
 		bpp = 3;
@@ -158,30 +189,6 @@ let pix_metod = {
 			pix[i++] = data[j + 1];
 			pix[i++] = data[j];
 			pix[i++] = 255;
-		}
-	},
-	
-	r8: function()
-	{
-		bpp = 1;
-		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
-		{
-			pix[i++] = data[j];
-			pix[i++] = data[j];
-			pix[i++] = data[j];
-			pix[i++] = 255;
-		}
-	},
-	
-	r4_8: function()
-	{
-		bpp = 1;
-		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 1)
-		{
-			pix[i] = 255*(data[j] & 0x0F)/15;
-			pix[i + 1] = pix[i];
-			pix[i + 2] = pix[i];
-			pix[i + 3] = 255;
 		}
 	},
 	
@@ -257,6 +264,54 @@ let pix_metod = {
 		}
 	},
 	
+	rgb444_16: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j] & 0x0F)/15;
+			pix[i++] = 255*(data[j] >>> 4)/15;
+			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
+			pix[i++] = 255;
+		}
+	},
+	
+	bgr444_16: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
+			pix[i++] = 255*(data[j] >>> 4)/15;
+			pix[i++] = 255*(data[j] & 0x0F)/15;
+			pix[i++] = 255;
+		}
+	},
+	
+	rgb555_16: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j] & 0x1F)/31;
+			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
+			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
+			pix[i++] = 255;
+		}
+	},
+	
+	bgr555_16: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
+			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
+			pix[i++] = 255*(data[j] & 0x1F)/31;
+			pix[i++] = 255;
+		}
+	},
+	
 	rgb565: function()
 	{
 		bpp = 2;
@@ -278,6 +333,30 @@ let pix_metod = {
 			pix[i++] = 255*((data[j + 1] & 0x7) << 3 | data[j] >>> 5)/63;
 			pix[i++] = 255*(data[j] & 0x1F)/31;
 			pix[i++] = 255;
+		}
+	},
+	
+	r8: function()
+	{
+		bpp = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = data[j];
+			pix[i++] = data[j];
+			pix[i++] = data[j];
+			pix[i++] = 255;
+		}
+	},
+	
+	r4_8: function()
+	{
+		bpp = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 1)
+		{
+			pix[i] = 255*(data[j] & 0x0F)/15;
+			pix[i + 1] = pix[i];
+			pix[i + 2] = pix[i];
+			pix[i + 3] = 255;
 		}
 	},
 	

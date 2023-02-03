@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Просмотр бинарного файла</title>
+<title>Просмотр бинарного изображения</title>
 <meta charset="utf-8">
 <style>
 canvas {
@@ -21,8 +21,8 @@ canvas {
 
 <select id='select_format_pix_32bit'>
 <option value="rgba8888">R8G8B8A8</option>
-<option value="bgra8888">B8G8R8A8</option>
 <option value="rgb888_32">R8G8B8_32</option>
+<option value="bgra8888">B8G8R8A8</option>
 <option value="bgr888_32">B8G8R8_32</option>
 </select>
 
@@ -35,12 +35,12 @@ canvas {
 <option value="r16">L16</option>
 <option value="r10_16">L10_16</option>
 <option value="rgba4444">R4G4B4A4</option>
-<option value="bgra4444">B4G4R4A4</option>
-<option value="rgba5551">R5G5B5A1</option>
-<option value="bgra5551">B5G5R5A1</option>
 <option value="rgb444_16">R4G4B4_16</option>
+<option value="bgra4444">B4G4R4A4</option>
 <option value="bgr444_16">B4G4R4_16</option>
+<option value="rgba5551">R5G5B5A1</option>
 <option value="rgb555_16">R5G5B5_16</option>
+<option value="bgra5551">B5G5R5A1</option>
 <option value="bgr555_16">B5G5R5_16</option>
 <option value="rgb565">R5G6B5</option>
 <option value="bgr565">B5G6R5</option>
@@ -49,7 +49,11 @@ canvas {
 <select id='select_format_pix_8bit'>
 <option value="r8">L8</option>
 <option value="r4_8">L4_8</option>
+<option value="rgb332">R3G3B2</option>
 <option value="rgb233">R2G3B3</option>
+<option value="rgba2321">R2G3B2A1</option>
+<option value="rgba232_8">R2G3B2_8</option>
+<option value="rgba2222">R2G2B2A2</option>
 <option value="rgb222_8">R2G2B2_8</option>
 </select>
 
@@ -111,7 +115,6 @@ height_input.value = height;
 offset_input.value = offset;
 
 resize();
-
 select_format_visible();
 
 let pix_metod = {
@@ -369,6 +372,55 @@ let pix_metod = {
 			pix[i++] = 255*(data[j] >> 2 & 7)/7;
 			pix[i++] = 255*(data[j] >> 5 & 7)/7;
 			pix[i++] = 255;
+		}
+	},
+	
+	rgb332: function()
+	{
+		bpp = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] & 7)/7;
+			pix[i++] = 255*(data[j] >> 3 & 7)/7;
+			pix[i++] = 255*(data[j] >> 6 & 3)/3;
+			pix[i++] = 255;
+		}
+	},
+	
+	
+	rgba2321: function()
+	{
+		bpp = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] & 3)/3;
+			pix[i++] = 255*(data[j] >> 2 & 7)/7;
+			pix[i++] = 255*(data[j] >> 5 & 3)/3;
+			pix[i++] = 255*(data[j] >> 7);
+		}
+	},
+	
+	rgba232_8: function()
+	{
+		bpp = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] & 3)/3;
+			pix[i++] = 255*(data[j] >> 2 & 7)/7;
+			pix[i++] = 255*(data[j] >> 5 & 3)/3;
+			pix[i++] = 255;
+		}
+	},
+	
+	rgba2222: function()
+	{
+		bpp = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] & 3)/3;
+			pix[i++] = 255*(data[j] >> 2 & 3)/3;
+			pix[i++] = 255*(data[j] >> 4 & 3)/3;
+			pix[i++] = 255*(data[j] >> 6 & 3)/3;
 		}
 	},
 	
@@ -813,7 +865,6 @@ window.onmousemove = function(event) {
 select_format_pix.onchange = function()
 {
 	select_format_visible();
-	
 	draw();
 }
 

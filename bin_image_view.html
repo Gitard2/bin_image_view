@@ -82,6 +82,7 @@ canvas {
 <button id='height_10plus'>+10</button>
 <button id='height_minus_deg_2'>2↓</button>
 <button id='height_plus_deg_2'>2↑</button>
+<button id='height_end_file'>end</button>
 <br>
 
 Смещение:
@@ -135,18 +136,6 @@ let pix_metod = {
 		pix.set(data.subarray(offset, offset + pix.length));
 	},
 	
-	bgra8888: function()
-	{
-		bpp = 4;
-		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 4)
-		{
-			pix[i++] = data[j + 2];
-			pix[i++] = data[j + 1];
-			pix[i++] = data[j];
-			pix[i++] = data[j + 3];
-		}
-	},
-	
 	rgb888_32: function()
 	{
 		bpp = 4;
@@ -156,6 +145,18 @@ let pix_metod = {
 			pix[i++] = data[j + 1];
 			pix[i++] = data[j + 2];
 			pix[i++] = 255;
+		}
+	},
+	
+	bgra8888: function()
+	{
+		bpp = 4;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 4)
+		{
+			pix[i++] = data[j + 2];
+			pix[i++] = data[j + 1];
+			pix[i++] = data[j];
+			pix[i++] = data[j + 3];
 		}
 	},
 	
@@ -231,42 +232,6 @@ let pix_metod = {
 		}
 	},
 	
-	bgra4444: function()
-	{
-		bpp = 2;
-		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
-		{
-			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
-			pix[i++] = 255*(data[j] >>> 4)/15;
-			pix[i++] = 255*(data[j] & 0x0F)/15;
-			pix[i++] = 255*(data[j + 1] >>> 4)/15;
-		}
-	},
-	
-	rgba5551: function()
-	{
-		bpp = 2;
-		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
-		{
-			pix[i++] = 255*(data[j] & 0x1F)/31;
-			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
-			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
-			pix[i++] = 255*(data[j + 1] >>> 7);
-		}
-	},
-	
-	bgra5551: function()
-	{
-		bpp = 2;
-		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
-		{
-			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
-			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
-			pix[i++] = 255*(data[j] & 0x1F)/31;
-			pix[i++] = 255*(data[j + 1] >>> 7);
-		}
-	},
-	
 	rgb444_16: function()
 	{
 		bpp = 2;
@@ -276,6 +241,18 @@ let pix_metod = {
 			pix[i++] = 255*(data[j] >>> 4)/15;
 			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
 			pix[i++] = 255;
+		}
+	},
+	
+	bgra4444: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
+			pix[i++] = 255*(data[j] >>> 4)/15;
+			pix[i++] = 255*(data[j] & 0x0F)/15;
+			pix[i++] = 255*(data[j + 1] >>> 4)/15;
 		}
 	},
 	
@@ -291,6 +268,18 @@ let pix_metod = {
 		}
 	},
 	
+	rgba5551: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j] & 0x1F)/31;
+			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
+			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
+			pix[i++] = 255*(data[j + 1] >>> 7);
+		}
+	},
+	
 	rgb555_16: function()
 	{
 		bpp = 2;
@@ -300,6 +289,18 @@ let pix_metod = {
 			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
 			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
 			pix[i++] = 255;
+		}
+	},
+	
+	bgra5551: function()
+	{
+		bpp = 2;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
+		{
+			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
+			pix[i++] = 255*((data[j + 1] & 0x3) << 3 | data[j] >>> 5)/31;
+			pix[i++] = 255*(data[j] & 0x1F)/31;
+			pix[i++] = 255*(data[j + 1] >>> 7);
 		}
 	},
 	
@@ -508,6 +509,7 @@ upload.onchange = function()
 	{
 		let reader = new FileReader();
 		reader.readAsArrayBuffer(file);
+		
 		reader.onload = function()
 		{
 			buff = reader.result;
@@ -695,6 +697,16 @@ height_plus_deg_2.onclick = function()
 	resize();
 	draw();
 }
+
+height_end_file.onclick = function()
+{
+	height = Math.ceil((data.length - offset)/bpp/width);
+	height_input.value = height;
+	
+	resize();
+	draw();
+}
+
 
 offset_input.oninput = function()
 {

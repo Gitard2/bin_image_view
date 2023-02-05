@@ -5,6 +5,7 @@
 <meta charset="utf-8">
 <style>
 canvas {
+	image-rendering: pixelated;
 	border:1px solid;
 }
 </style>
@@ -56,6 +57,11 @@ canvas {
 <option value="rgba2222">R2G2B2A2</option>
 <option value="rgb222_8">R2G2B2_8</option>
 </select>
+
+Вид:
+<button id='zoom_x1'>x1</button>
+<button id='zoom_minus'>-z</button>
+<button id='zoom_plus'>+z</button>
 
 Файл:
 <input type="file" id='upload'>
@@ -110,6 +116,7 @@ let context = canvas.getContext('2d');
 let buff, data, imgd, pix;
 let mouseX, mouseY, isDragging;
 let bpp;
+let zoom = 1, mouse_dx = 0, mouse_dy = 0;
 let width = 512, height = 512, offset = 0;
 width_input.value = width;
 height_input.value = height;
@@ -442,8 +449,15 @@ function resize()
 {
 	canvas.width = width;
 	canvas.height = height;
+	canvas_zoom();
 	imgd = context.getImageData(0, 0, canvas.width, canvas.height);
 	pix = imgd.data;
+}
+
+function canvas_zoom()
+{
+	canvas.style.width = `${zoom*width}px`;
+	canvas.style.height = `${zoom*height}px`;
 }
 
 function draw()
@@ -518,6 +532,33 @@ upload.onchange = function()
 			draw();
 		}
 	}
+}
+
+zoom_minus.onclick = function()
+{
+	if (zoom > 1)
+	{
+		zoom--;
+		zoom_x1.innerHTML = `x${zoom}`;
+	}
+	
+	canvas_zoom();
+}
+
+zoom_x1.onclick = function()
+{
+	zoom = 1;
+	zoom_x1.innerHTML = `x${zoom}`;
+	
+	canvas_zoom();
+}
+
+zoom_plus.onclick = function()
+{
+	zoom++;
+	zoom_x1.innerHTML = `x${zoom}`;
+	
+	canvas_zoom();
 }
 
 width_input.oninput = function()
@@ -856,20 +897,28 @@ window.onmousemove = function(event) {
 	if (isDragging && buff) {
 		let x = event.pageX - canvas.offsetLeft;
 		let y = event.pageY - canvas.offsetTop;
-		let dx = mouseX - x;
-		let dy = mouseY - y;
+		mouse_dx += (mouseX - x)/zoom;
+		mouse_dy += (mouseY - y)/zoom;
+		let dx = Math.trunc(mouse_dx);
+		let dy = Math.trunc(mouse_dy);
+		
 		let doff = bpp*(dx + dy*width);
 		
-		offset += doff;
-		if (offset < 0)
-			offset = bpp*width + offset % (bpp*width);
-		
-		offset_input.value = offset;
+		if (doff != 0)
+		{
+			mouse_dx -= dx;
+			mouse_dy -= dy;
+			offset += doff;
+			if (offset < 0)
+				offset = bpp*width + offset % (bpp*width);
+			
+			offset_input.value = offset;
+			
+			draw();
+		}
 		
 		mouseX = x;
 		mouseY = y;
-		
-		draw();
 	}
 }
 

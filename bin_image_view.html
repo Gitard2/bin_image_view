@@ -18,6 +18,7 @@ canvas {
 <option value="pix_24bit">24bit</option>
 <option value="pix_16bit">16bit</option>
 <option value="pix_8bit">8bit</option>
+<option value="pix_notbyte">notbyte</option>
 </select>
 
 <select id='select_format_pix_32bit'>
@@ -56,6 +57,12 @@ canvas {
 <option value="rgba232_8">R2G3B2_8</option>
 <option value="rgba2222">R2G2B2A2</option>
 <option value="rgb222_8">R2G2B2_8</option>
+</select>
+
+<select id='select_format_pix_notbyte'>
+<option value="r1">L1</option>
+<option value="r2">L2</option>
+<option value="r4">L4</option>
 </select>
 
 Вид:
@@ -115,8 +122,9 @@ canvas {
 let context = canvas.getContext('2d');
 let buff, data, imgd, pix;
 let mouseX, mouseY, isDragging;
-let bpp;
-let zoom = 1, mouse_dx = 0, mouse_dy = 0;
+let bpp, bpix_x, bpix_y;
+let zoom = 1;
+let mouse_dx = 0, mouse_dy = 0, mouse_doff = 0;
 let width = 512, height = 512, offset = 0;
 width_input.value = width;
 height_input.value = height;
@@ -139,13 +147,13 @@ let pix_metod = {
 	
 	rgba8888: function()
 	{
-		bpp = 4;
+		bpp = 4, bpix_x = 1, bpix_y = 1;
 		pix.set(data.subarray(offset, offset + pix.length));
 	},
 	
 	rgb888_32: function()
 	{
-		bpp = 4;
+		bpp = 4, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 4)
 		{
 			pix[i++] = data[j];
@@ -157,7 +165,7 @@ let pix_metod = {
 	
 	bgra8888: function()
 	{
-		bpp = 4;
+		bpp = 4, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 4)
 		{
 			pix[i++] = data[j + 2];
@@ -169,7 +177,7 @@ let pix_metod = {
 	
 	bgr888_32: function()
 	{
-		bpp = 4;
+		bpp = 4, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 4)
 		{
 			pix[i++] = data[j + 2];
@@ -181,7 +189,7 @@ let pix_metod = {
 	
 	rgb888: function()
 	{
-		bpp = 3;
+		bpp = 3, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
 		{
 			pix[i++] = data[j];
@@ -193,7 +201,7 @@ let pix_metod = {
 	
 	bgr888: function()
 	{
-		bpp = 3;
+		bpp = 3, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
 		{
 			pix[i++] = data[j + 2];
@@ -205,7 +213,7 @@ let pix_metod = {
 	
 	r16: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 2)
 		{
 			pix[i] = (data[j + 1] << 8 | data[j])/255;
@@ -217,7 +225,7 @@ let pix_metod = {
 	
 	r10_16: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 2)
 		{
 			pix[i] = (data[j + 1] << 8 | data[j])/4;
@@ -229,7 +237,7 @@ let pix_metod = {
 	
 	rgba4444: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j] & 0x0F)/15;
@@ -241,7 +249,7 @@ let pix_metod = {
 	
 	rgb444_16: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j] & 0x0F)/15;
@@ -253,7 +261,7 @@ let pix_metod = {
 	
 	bgra4444: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
@@ -265,7 +273,7 @@ let pix_metod = {
 	
 	bgr444_16: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j + 1] & 0x0F)/15;
@@ -277,7 +285,7 @@ let pix_metod = {
 	
 	rgba5551: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j] & 0x1F)/31;
@@ -289,7 +297,7 @@ let pix_metod = {
 	
 	rgb555_16: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j] & 0x1F)/31;
@@ -301,7 +309,7 @@ let pix_metod = {
 	
 	bgra5551: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
@@ -313,7 +321,7 @@ let pix_metod = {
 	
 	bgr555_16: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j + 1] >> 2 & 0x1F)/31;
@@ -325,7 +333,7 @@ let pix_metod = {
 	
 	rgb565: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j] & 0x1F)/31;
@@ -337,7 +345,7 @@ let pix_metod = {
 	
 	bgr565: function()
 	{
-		bpp = 2;
+		bpp = 2, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 2)
 		{
 			pix[i++] = 255*(data[j + 1] >>> 3)/31;
@@ -349,7 +357,7 @@ let pix_metod = {
 	
 	r8: function()
 	{
-		bpp = 1;
+		bpp = 1, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
 		{
 			pix[i++] = data[j];
@@ -361,7 +369,7 @@ let pix_metod = {
 	
 	r4_8: function()
 	{
-		bpp = 1;
+		bpp = 1, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 1)
 		{
 			pix[i] = 255*(data[j] & 0x0F)/15;
@@ -373,7 +381,7 @@ let pix_metod = {
 	
 	rgb233: function()
 	{
-		bpp = 1;
+		bpp = 1, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
 		{
 			pix[i++] = 255*(data[j] & 3)/3;
@@ -385,7 +393,7 @@ let pix_metod = {
 	
 	rgb332: function()
 	{
-		bpp = 1;
+		bpp = 1, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
 		{
 			pix[i++] = 255*(data[j] & 7)/7;
@@ -398,7 +406,7 @@ let pix_metod = {
 	
 	rgba2321: function()
 	{
-		bpp = 1;
+		bpp = 1, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
 		{
 			pix[i++] = 255*(data[j] & 3)/3;
@@ -410,7 +418,7 @@ let pix_metod = {
 	
 	rgba232_8: function()
 	{
-		bpp = 1;
+		bpp = 1, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
 		{
 			pix[i++] = 255*(data[j] & 3)/3;
@@ -422,7 +430,7 @@ let pix_metod = {
 	
 	rgba2222: function()
 	{
-		bpp = 1;
+		bpp = 1, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
 		{
 			pix[i++] = 255*(data[j] & 3)/3;
@@ -434,13 +442,58 @@ let pix_metod = {
 	
 	rgb222_8: function()
 	{
-		bpp = 1;
+		bpp = 1, bpix_x = 1, bpix_y = 1;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
 		{
 			pix[i++] = 255*(data[j] & 3)/3;
 			pix[i++] = 255*(data[j] >> 2 & 3)/3;
 			pix[i++] = 255*(data[j] >> 4 & 3)/3;
 			pix[i++] = 255;
+		}
+	},
+	
+	r1: function()
+	{
+		bpp = 1, bpix_x = 8, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			for (let k = 7; k >= 0 && i < pix.length; k--, i += 4)
+			{
+				pix[i] = 255*(data[j] >> k & 1);
+				pix[i + 1] = pix[i];
+				pix[i + 2] = pix[i];
+				pix[i + 3] = 255;
+			}
+		}
+	},
+	
+	r2: function()
+	{
+		bpp = 1, bpix_x = 4, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			for (let k = 6; k >= 0 && i < pix.length; k -= 2, i += 4)
+			{
+				pix[i] = 255*(data[j] >> k & 3)/3;
+				pix[i + 1] = pix[i];
+				pix[i + 2] = pix[i];
+				pix[i + 3] = 255;
+			}
+		}
+	},
+	
+	r4: function()
+	{
+		bpp = 1, bpix_x = 2, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			for (let k = 4; k >= 0 && i < pix.length; k -= 4, i += 4)
+			{
+				pix[i] = 255*(data[j] >> k & 15)/15;
+				pix[i + 1] = pix[i];
+				pix[i + 2] = pix[i];
+				pix[i + 3] = 255;
+			}
 		}
 	},
 };
@@ -483,6 +536,10 @@ function draw()
 			case "pix_8bit":
 				pix_metod[select_format_pix_8bit.value]();
 				break;
+			
+			case "pix_notbyte":
+				pix_metod[select_format_pix_notbyte.value]();
+				break;
 		}
 		
 		context.putImageData(imgd, 0, 0);
@@ -495,6 +552,7 @@ function select_format_visible()
 	select_format_pix_24bit.style.display = 'none';
 	select_format_pix_16bit.style.display = 'none';
 	select_format_pix_8bit.style.display = 'none';
+	select_format_pix_notbyte.style.display = 'none';
 	
 	switch (select_format_pix.value)
 	{
@@ -512,6 +570,10 @@ function select_format_visible()
 		
 		case "pix_8bit":
 			select_format_pix_8bit.style.display = 'inline';
+			break;
+		
+		case "pix_notbyte":
+			select_format_pix_notbyte.style.display = 'inline';
 			break;
 	}
 }
@@ -741,13 +803,15 @@ height_plus_deg_2.onclick = function()
 
 height_end_file.onclick = function()
 {
-	height = Math.ceil((data.length - offset)/bpp/width);
-	height_input.value = height;
-	
-	resize();
-	draw();
+	if (data.length - offset > 0)
+	{
+		height = Math.ceil((data.length - offset)/bpp/width*bpix_x*bpix_y);
+		height_input.value = height;
+		
+		resize();
+		draw();
+	}
 }
-
 
 offset_input.oninput = function()
 {
@@ -824,9 +888,10 @@ offset_plus_10pix.onclick = function()
 
 offset_minus_wpix.onclick = function()
 {
-	if (offset >= bpp*width)
+	let dw = Math.floor(bpp*width*bpix_y/bpix_x);
+	if (offset >= dw)
 	{
-		offset -= bpp*width;
+		offset -= dw;
 		offset_input.value = offset;
 		
 		draw();
@@ -835,7 +900,7 @@ offset_minus_wpix.onclick = function()
 
 offset_plus_wpix.onclick = function()
 {
-	offset += bpp*width;
+	offset += Math.floor(bpp*width*bpix_y/bpix_x);
 	offset_input.value = offset;
 	
 	draw();
@@ -843,9 +908,10 @@ offset_plus_wpix.onclick = function()
 
 offset_minus_10wpix.onclick = function()
 {
-	if (offset >= 10*bpp*width)
+	let dw = Math.floor(bpp*width*bpix_y/bpix_x);
+	if (offset >= 10*dw)
 	{
-		offset -= 10*bpp*width;
+		offset -= 10*dw;
 		offset_input.value = offset;
 		
 		draw();
@@ -854,7 +920,8 @@ offset_minus_10wpix.onclick = function()
 
 offset_plus_10wpix.onclick = function()
 {
-	offset += 10*bpp*width;
+	let dw = Math.floor(bpp*width*bpix_y/bpix_x);
+	offset += 10*dw;
 	offset_input.value = offset;
 	
 	draw();
@@ -862,9 +929,10 @@ offset_plus_10wpix.onclick = function()
 
 offset_minus_hpix.onclick = function()
 {
-	if (offset >= bpp*width*height)
+	let dh = Math.floor(bpp*width*height*bpix_y/bpix_x);
+	if (offset >= dh)
 	{
-		offset -= bpp*width*height;
+		offset -= dh;
 		offset_input.value = offset;
 		
 		draw();
@@ -873,7 +941,7 @@ offset_minus_hpix.onclick = function()
 
 offset_plus_hpix.onclick = function()
 {
-	offset += bpp*width*height;
+	offset += Math.floor(bpp*width*height*bpix_y/bpix_x);
 	offset_input.value = offset;
 	
 	draw();
@@ -897,20 +965,20 @@ window.onmousemove = function(event) {
 	if (isDragging && buff) {
 		let x = event.pageX - canvas.offsetLeft;
 		let y = event.pageY - canvas.offsetTop;
-		mouse_dx += (mouseX - x)/zoom;
-		mouse_dy += (mouseY - y)/zoom;
-		let dx = Math.trunc(mouse_dx);
-		let dy = Math.trunc(mouse_dy);
+		mouse_dx += mouseX - x;
+		mouse_dy += mouseY - y;
+		let dx = Math.trunc(mouse_dx/zoom/bpix_x);
+		let dy = Math.trunc(mouse_dy/zoom/bpix_y);
 		
-		let doff = bpp*(dx + dy*width);
+		let doff = Math.trunc(bpp*(dx + dy*width/bpix_x));
 		
 		if (doff != 0)
 		{
-			mouse_dx -= dx;
-			mouse_dy -= dy;
+			mouse_dx = mouse_dx%(zoom*bpix_x);
+			mouse_dy = mouse_dy%(zoom*bpix_y);
 			offset += doff;
 			if (offset < 0)
-				offset = bpp*width + offset % (bpp*width);
+				offset = Math.floor(bpp*width/bpix_x + offset % (bpp*width/bpix_x));
 			
 			offset_input.value = offset;
 			
@@ -945,6 +1013,11 @@ select_format_pix_16bit.onchange = function()
 }
 
 select_format_pix_8bit.onchange = function()
+{
+	draw();
+}
+
+select_format_pix_notbyte.onchange = function()
 {
 	draw();
 }

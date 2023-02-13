@@ -124,7 +124,7 @@ let buff, data, imgd, pix;
 let mouseX, mouseY, isDragging;
 let bpp, bpix_x, bpix_y;
 let zoom = 1;
-let mouse_dx = 0, mouse_dy = 0, mouse_doff = 0;
+let mouse_dx = 0, mouse_dy = 0;
 let width = 512, height = 512, offset = 0;
 width_input.value = width;
 height_input.value = height;
@@ -861,10 +861,13 @@ offset_minus_pix.onclick = function()
 
 offset_plus_pix.onclick = function()
 {
-	offset += bpp;
-	offset_input.value = offset;
-	
-	draw();
+	if (buff)
+	{
+		offset += bpp;
+		offset_input.value = offset;
+		
+		draw();
+	}
 }
 
 offset_minus_10pix.onclick = function()
@@ -880,10 +883,13 @@ offset_minus_10pix.onclick = function()
 
 offset_plus_10pix.onclick = function()
 {
-	offset += 10*bpp;
-	offset_input.value = offset;
-	
-	draw();
+	if (buff)
+	{
+		offset += 10*bpp;
+		offset_input.value = offset;
+		
+		draw();
+	}
 }
 
 offset_minus_wpix.onclick = function()
@@ -900,10 +906,13 @@ offset_minus_wpix.onclick = function()
 
 offset_plus_wpix.onclick = function()
 {
-	offset += Math.floor(bpp*width*bpix_y/bpix_x);
-	offset_input.value = offset;
-	
-	draw();
+	if (buff)
+	{
+		offset += Math.floor(bpp*width*bpix_y/bpix_x);
+		offset_input.value = offset;
+		
+		draw();
+	}
 }
 
 offset_minus_10wpix.onclick = function()
@@ -920,11 +929,14 @@ offset_minus_10wpix.onclick = function()
 
 offset_plus_10wpix.onclick = function()
 {
-	let dw = Math.floor(bpp*width*bpix_y/bpix_x);
-	offset += 10*dw;
-	offset_input.value = offset;
-	
-	draw();
+	if (buff)
+	{
+		let dw = Math.floor(bpp*width*bpix_y/bpix_x);
+		offset += 10*dw;
+		offset_input.value = offset;
+		
+		draw();
+	}
 }
 
 offset_minus_hpix.onclick = function()
@@ -941,10 +953,13 @@ offset_minus_hpix.onclick = function()
 
 offset_plus_hpix.onclick = function()
 {
-	offset += Math.floor(bpp*width*height*bpix_y/bpix_x);
-	offset_input.value = offset;
-	
-	draw();
+	if (buff)
+	{
+		offset += Math.floor(bpp*width*height*bpix_y/bpix_x);
+		offset_input.value = offset;
+		
+		draw();
+	}
 }
 
 // События кнопок мыши

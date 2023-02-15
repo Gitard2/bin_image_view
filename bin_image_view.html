@@ -19,6 +19,7 @@ canvas {
 <option value="pix_16bit">16bit</option>
 <option value="pix_8bit">8bit</option>
 <option value="pix_notbyte">notbyte</option>
+<option value="pix_s3tc">S3TC</option>
 </select>
 
 <select id='select_format_pix_32bit'>
@@ -63,6 +64,10 @@ canvas {
 <option value="r1">L1</option>
 <option value="r2">L2</option>
 <option value="r4">L4</option>
+</select>
+
+<select id='select_format_pix_s3tc'>
+<option value="dxt1">DXT1</option>
 </select>
 
 Вид:
@@ -496,6 +501,64 @@ let pix_metod = {
 			}
 		}
 	},
+	
+	dxt1: function()
+	{
+		bpp = 8, bpix_x = 4, bpix_y = 4;
+		let dxt1_pix = [];
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 8)
+		{
+			for (let i = j, k = 0; i < j + 4; i += 2)
+			{
+				dxt1_pix[k++] = 255*(data[i + 1] >>> 3)/31;
+				dxt1_pix[k++] = 255*((data[i + 1] & 0x7) << 3 | data[i] >>> 5)/63;
+				dxt1_pix[k++] = 255*(data[i] & 0x1F)/31;
+				dxt1_pix[k++] = 255;
+			}
+			
+			if ((data[j] | data[j + 1] << 8) > (data[j + 2] | data[j + 3] << 8))
+			{
+				dxt1_pix[8] = 2*dxt1_pix[0]/3 + dxt1_pix[4]/3;
+				dxt1_pix[9] = 2*dxt1_pix[1]/3 + dxt1_pix[5]/3;
+				dxt1_pix[10] = 2*dxt1_pix[2]/3 + dxt1_pix[6]/3;
+				dxt1_pix[11] = 255;
+				
+				dxt1_pix[12] = dxt1_pix[0]/3 + 2*dxt1_pix[4]/3;
+				dxt1_pix[13] = dxt1_pix[1]/3 + 2*dxt1_pix[5]/3;
+				dxt1_pix[14] = dxt1_pix[2]/3 + 2*dxt1_pix[6]/3;
+				dxt1_pix[15] = 255;
+			}
+			else
+			{
+				dxt1_pix[8] = dxt1_pix[0]/2 + dxt1_pix[4]/2;
+				dxt1_pix[9] = dxt1_pix[1]/2 + dxt1_pix[5]/2;
+				dxt1_pix[10] = dxt1_pix[2]/2 + dxt1_pix[6]/2;
+				dxt1_pix[11] = 255;
+				
+				dxt1_pix[12] = 0;
+				dxt1_pix[13] = 0;
+				dxt1_pix[14] = 0;
+				dxt1_pix[15] = 0;
+			}
+			
+			for (let h = 0, p, d; h < 4; h++)
+			{
+				for (let w = 0; w < 4; w++)
+				{
+					p = i + 4*(w + h*width);
+					d = 4*(data[j + 4 + h] >> 2*w & 3);
+					pix[p++] = dxt1_pix[d++];
+					pix[p++] = dxt1_pix[d++];
+					pix[p++] = dxt1_pix[d++];
+					pix[p] = dxt1_pix[d];
+				}
+			}
+			
+			i += 16;
+			if (i/4%width == 0)
+				i += 12*width;
+		}
+	},
 };
 
 function resize()
@@ -540,6 +603,10 @@ function draw()
 			case "pix_notbyte":
 				pix_metod[select_format_pix_notbyte.value]();
 				break;
+			
+			case "pix_s3tc":
+				pix_metod[select_format_pix_s3tc.value]();
+				break;
 		}
 		
 		context.putImageData(imgd, 0, 0);
@@ -553,6 +620,7 @@ function select_format_visible()
 	select_format_pix_16bit.style.display = 'none';
 	select_format_pix_8bit.style.display = 'none';
 	select_format_pix_notbyte.style.display = 'none';
+	select_format_pix_s3tc.style.display = 'none';
 	
 	switch (select_format_pix.value)
 	{
@@ -574,6 +642,10 @@ function select_format_visible()
 		
 		case "pix_notbyte":
 			select_format_pix_notbyte.style.display = 'inline';
+			break;
+		
+		case "pix_s3tc":
+			select_format_pix_s3tc.style.display = 'inline';
 			break;
 	}
 }
@@ -626,17 +698,19 @@ zoom_plus.onclick = function()
 width_input.oninput = function()
 {
 	if (width_input.value > 0)
+	{
 		width = +width_input.value;
-	
-	resize();
-	draw();
+
+		resize();
+		draw();
+	}
 }
 
 width_minus.onclick = function()
 {
 	if (width > 0)
 	{
-		width--;
+		width -= bpix_x;
 		width_input.value = width;
 		
 		resize();
@@ -646,7 +720,7 @@ width_minus.onclick = function()
 
 width_plus.onclick = function()
 {
-	width++;
+	width += bpix_x;
 	width_input.value = width;
 	
 	resize();
@@ -657,7 +731,7 @@ width_10minus.onclick = function()
 {
 	if (width > 10)
 	{
-		width -= 10;
+		width -= 10*bpix_x;
 		width_input.value = width;
 		
 		resize();
@@ -667,7 +741,7 @@ width_10minus.onclick = function()
 
 width_10plus.onclick = function()
 {
-	width += 10;
+	width += 10*bpix_x;
 	width_input.value = width;
 	
 	resize();
@@ -724,10 +798,12 @@ width_mul_2.onclick = function()
 height_input.oninput = function()
 {
 	if (height_input.value > 0)
+	{
 		height = +height_input.value;
-	
-	resize();
-	draw();
+		
+		resize();
+		draw();
+	}
 }
 
 height_minus.onclick = function()
@@ -894,7 +970,7 @@ offset_plus_10pix.onclick = function()
 
 offset_minus_wpix.onclick = function()
 {
-	let dw = Math.floor(bpp*width*bpix_y/bpix_x);
+	let dw = Math.floor(bpp*width/bpix_x);
 	if (offset >= dw)
 	{
 		offset -= dw;
@@ -908,7 +984,7 @@ offset_plus_wpix.onclick = function()
 {
 	if (buff)
 	{
-		offset += Math.floor(bpp*width*bpix_y/bpix_x);
+		offset += Math.floor(bpp*width/bpix_x);
 		offset_input.value = offset;
 		
 		draw();
@@ -917,7 +993,7 @@ offset_plus_wpix.onclick = function()
 
 offset_minus_10wpix.onclick = function()
 {
-	let dw = Math.floor(bpp*width*bpix_y/bpix_x);
+	let dw = Math.floor(bpp*width/bpix_x);
 	if (offset >= 10*dw)
 	{
 		offset -= 10*dw;
@@ -931,7 +1007,7 @@ offset_plus_10wpix.onclick = function()
 {
 	if (buff)
 	{
-		let dw = Math.floor(bpp*width*bpix_y/bpix_x);
+		let dw = Math.floor(bpp*width/bpix_x);
 		offset += 10*dw;
 		offset_input.value = offset;
 		
@@ -941,7 +1017,7 @@ offset_plus_10wpix.onclick = function()
 
 offset_minus_hpix.onclick = function()
 {
-	let dh = Math.floor(bpp*width*height*bpix_y/bpix_x);
+	let dh = Math.floor(bpp*width*height/bpix_x/bpix_y);
 	if (offset >= dh)
 	{
 		offset -= dh;
@@ -955,7 +1031,7 @@ offset_plus_hpix.onclick = function()
 {
 	if (buff)
 	{
-		offset += Math.floor(bpp*width*height*bpix_y/bpix_x);
+		offset += Math.floor(bpp*width*height/bpix_x/bpix_y);
 		offset_input.value = offset;
 		
 		draw();
@@ -1033,6 +1109,11 @@ select_format_pix_8bit.onchange = function()
 }
 
 select_format_pix_notbyte.onchange = function()
+{
+	draw();
+}
+
+select_format_pix_s3tc.onchange = function()
 {
 	draw();
 }

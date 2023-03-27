@@ -37,6 +37,7 @@ canvas {
 <select id='select_format_pix_16bit'>
 <option value="r16">L16</option>
 <option value="r10_16">L10_16</option>
+<option value="r8_16">L8_16</option>
 <option value="rgba4444">R4G4B4A4</option>
 <option value="rgb444_16">R4G4B4_16</option>
 <option value="bgra4444">B4G4R4A4</option>
@@ -236,6 +237,18 @@ let pix_metod = {
 		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 2)
 		{
 			pix[i] = (data[j + 1] << 8 | data[j])/4;
+			pix[i + 1] = pix[i];
+			pix[i + 2] = pix[i];
+			pix[i + 3] = 255;
+		}
+	},
+	
+	r8_16: function()
+	{
+		bpp = 2, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4, j += 2)
+		{
+			pix[i] = data[j + 1] << 8 | data[j];
 			pix[i + 1] = pix[i];
 			pix[i + 2] = pix[i];
 			pix[i + 3] = 255;

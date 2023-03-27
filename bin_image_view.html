@@ -998,7 +998,7 @@ height_end_file.onclick = function()
 {
 	if (data.length - offset > 0)
 	{
-		height = Math.ceil((data.length - offset)/bpp/width*bpix_x*bpix_y);
+		height = Math.ceil((data.length - offset)/bpp*bpix_x/width)*bpix_y;
 		height_input.value = height;
 		
 		resize();

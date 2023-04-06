@@ -32,6 +32,10 @@ canvas {
 <select id='select_format_pix_24bit'>
 <option value="rgb888">R8G8B8</option>
 <option value="bgr888">B8G8R8</option>
+<option value="rgba6666">R6G6B6A6</option>
+<option value="rgb666_24">R6G6B6_24</option>
+<option value="bgra6666">B6G6R6A6</option>
+<option value="bgr666_24">B6G6R6_24</option>
 </select>
 
 <select id='select_format_pix_16bit'>
@@ -215,6 +219,54 @@ let pix_metod = {
 			pix[i++] = data[j + 2];
 			pix[i++] = data[j + 1];
 			pix[i++] = data[j];
+			pix[i++] = 255;
+		}
+	},
+	
+	rgba6666: function()
+	{
+		bpp = 3, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
+		{
+			pix[i++] = 255*(data[j] & 0x3F)/63;
+			pix[i++] = 255*((data[j + 1] & 0xF) << 2 | data[j] >>> 6)/63;
+			pix[i++] = 255*((data[j + 2] & 0x3) << 4 | data[j + 1] >>> 4)/63;
+			pix[i++] = 255*(data[j + 3] >>> 2)/63;
+		}
+	},
+	
+	rgb666_24: function()
+	{
+		bpp = 3, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
+		{
+			pix[i++] = 255*(data[j] & 0x3F)/63;
+			pix[i++] = 255*((data[j + 1] & 0xF) << 2 | data[j] >>> 6)/63;
+			pix[i++] = 255*((data[j + 2] & 0x3) << 4 | data[j + 1] >>> 4)/63;
+			pix[i++] = 255;
+		}
+	},
+	
+	bgra6666: function()
+	{
+		bpp = 3, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
+		{
+			pix[i++] = 255*((data[j + 2] & 0x3) << 4 | data[j + 1] >>> 4)/63;
+			pix[i++] = 255*((data[j + 1] & 0xF) << 2 | data[j] >>> 6)/63;
+			pix[i++] = 255*(data[j] & 0x3F)/63;
+			pix[i++] = 255*(data[j + 3] >>> 2)/63;
+		}
+	},
+	
+	bgr666_24: function()
+	{
+		bpp = 3, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
+		{
+			pix[i++] = 255*((data[j + 2] & 0x3) << 4 | data[j + 1] >>> 4)/63;
+			pix[i++] = 255*((data[j + 1] & 0xF) << 2 | data[j] >>> 6)/63;
+			pix[i++] = 255*(data[j] & 0x3F)/63;
 			pix[i++] = 255;
 		}
 	},

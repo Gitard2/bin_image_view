@@ -38,6 +38,7 @@ canvas {
 <option value="r16">L16</option>
 <option value="r10_16">L10_16</option>
 <option value="r8_16">L8_16</option>
+<option value="r8a8">L8A8</option>
 <option value="rgba4444">R4G4B4A4</option>
 <option value="bgra4444">B4G4R4A4</option>
 <option value="rgba5551">R5G5B5A1</option>
@@ -67,13 +68,13 @@ canvas {
 <option value="dxt5">DXT5</option>
 </select>
 
+Альфа:
+<input type="checkbox" checked id='ch_alpha'>
+
 Вид:
 <button id='zoom_x1'>x1</button>
 <button id='zoom_minus'>-z</button>
 <button id='zoom_plus'>+z</button>
-
-Альфа:
-<input type="checkbox" checked id='ch_alpha'>
 
 Файл:
 <input type="file" id='upload'>
@@ -257,6 +258,18 @@ let pix_metod = {
 			pix[i + 1] = pix[i];
 			pix[i + 2] = pix[i];
 			pix[i + 3] = 255;
+		}
+	},
+	
+	r8a8: function()
+	{
+		bpp = 2, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; i += 4)
+		{
+			pix[i] = data[j++];
+			pix[i + 1] = pix[i];
+			pix[i + 2] = pix[i];
+			pix[i + 3] = data[j++];
 		}
 	},
 	

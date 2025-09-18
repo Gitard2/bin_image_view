@@ -63,9 +63,11 @@ canvas {
 </select>
 
 <select id='select_format_pix_block'>
-<option value="dxt1">DXT1</option>
-<option value="dxt3">DXT3</option>
-<option value="dxt5">DXT5</option>
+<option value="dxt1">BC1 (DXT1)</option>
+<option value="dxt3">BC2 (DXT3)</option>
+<option value="dxt5">BC3 (DXT5)</option>
+<!--option value="bc7">BC7</option-->
+<option value="bc7_mode">BC7_mode</option>
 </select>
 
 Альфа:
@@ -622,6 +624,86 @@ let pix_metod = {
 				i += 12*width;
 		}
 	},
+	
+	/*bc7: function()
+	{
+		bpp = 16, bpix_x = 4, bpix_y = 4;
+		
+		let modes_colors = [
+			[255,   0,   0, 255], // Режим 0 - красный
+			[  0, 255,   0, 255], // Режим 1 - зеленый
+			[  0,   0, 255, 255], // Режим 2 - синий
+			[255, 255,   0, 255], // Режим 3 - желтый
+			[  0, 255, 255, 255], // Режим 4 - голубой
+			[255,   0, 255, 255], // Режим 5 - фиолетовый
+			[255, 255, 255, 255], // Режим 6 - белый
+			[  0,   0,   0, 255], // Режим 7 - черный
+			[128, 128, 128, 255], // Режим 8 - серый
+		];
+		
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 16)
+		{
+			let mode = 0;
+			while (mode < 8 && (data[j] >> mode & 1) == 0)
+				mode++;
+			
+			for (let h = 0, p, d; h < 4; h++)
+			{
+				for (let w = 0; w < 4; w++)
+				{
+					p = i + 4*(w + h*width);
+					pix[p++] = modes_colors[mode][0];
+					pix[p++] = modes_colors[mode][1];
+					pix[p++] = modes_colors[mode][2];
+					pix[p  ] = modes_colors[mode][3];
+				}
+			}
+			
+			i += 16;
+			if (i/4%width == 0)
+				i += 12*width;
+		}
+	},*/
+	
+	bc7_mode: function()
+	{
+		bpp = 16, bpix_x = 4, bpix_y = 4;
+		
+		let modes_colors = [
+			[255,   0,   0, 255], // Режим 0 - красный
+			[  0, 255,   0, 255], // Режим 1 - зеленый
+			[  0,   0, 255, 255], // Режим 2 - синий
+			[255, 255,   0, 255], // Режим 3 - желтый
+			[  0, 255, 255, 255], // Режим 4 - голубой
+			[255,   0, 255, 255], // Режим 5 - фиолетовый
+			[255, 255, 255, 255], // Режим 6 - белый
+			[  0,   0,   0, 255], // Режим 7 - черный
+			[128, 128, 128, 255], // Режим 8 - серый
+		];
+		
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 16)
+		{
+			let mode = 0;
+			while (mode < 8 && (data[j] >> mode & 1) == 0)
+				mode++;
+			
+			for (let h = 0, p, d; h < 4; h++)
+			{
+				for (let w = 0; w < 4; w++)
+				{
+					p = i + 4*(w + h*width);
+					pix[p++] = modes_colors[mode][0];
+					pix[p++] = modes_colors[mode][1];
+					pix[p++] = modes_colors[mode][2];
+					pix[p  ] = modes_colors[mode][3];
+				}
+			}
+			
+			i += 16;
+			if (i/4%width == 0)
+				i += 12*width;
+		}
+	},
 };
 
 function resize()
@@ -876,7 +958,7 @@ height_minus.onclick = function()
 {
 	if (height > 0)
 	{
-		height--;
+		height -= bpix_y;
 		height_input.value = height;
 		
 		resize();
@@ -886,7 +968,7 @@ height_minus.onclick = function()
 
 height_plus.onclick = function()
 {
-	height++;
+	height += bpix_y;
 	height_input.value = height;
 	
 	resize();
@@ -895,9 +977,9 @@ height_plus.onclick = function()
 
 height_10minus.onclick = function()
 {
-	if (height > 10)
+	if (height > 10*bpix_y)
 	{
-		height -= 10;
+		height -= 10*bpix_y;
 		height_input.value = height;
 		
 		resize();
@@ -907,7 +989,7 @@ height_10minus.onclick = function()
 
 height_10plus.onclick = function()
 {
-	height += 10;
+	height += 10*bpix_y;
 	height_input.value = height;
 	
 	resize();

@@ -51,9 +51,15 @@ canvas {
 <option value="r8">L8</option>
 <option value="r4_8">L4_8</option>
 <option value="rgb332">R3G3B2</option>
+<option value="bgr332">B3G3R2</option>
 <option value="rgb233">R2G3B3</option>
+<option value="bgr233">B2G3R3</option>
+<option value="rgb323">R3G2B3</option>
+<option value="bgr323">B3G2R3</option>
 <option value="rgba2321">R2G3B2A1</option>
+<option value="bgra2321">B2G3R2A1</option>
 <option value="rgba2222">R2G2B2A2</option>
+<option value="bgra2222">B2G2R2A2</option>
 </select>
 
 <select id='select_format_pix_notbyte'>
@@ -371,18 +377,6 @@ let pix_metod = {
 		}
 	},
 	
-	rgb233: function()
-	{
-		bpp = 1, bpix_x = 1, bpix_y = 1;
-		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
-		{
-			pix[i++] = 255*(data[j] & 3)/3;
-			pix[i++] = 255*(data[j] >> 2 & 7)/7;
-			pix[i++] = 255*(data[j] >> 5 & 7)/7;
-			pix[i++] = 255;
-		}
-	},
-	
 	rgb332: function()
 	{
 		bpp = 1, bpix_x = 1, bpix_y = 1;
@@ -395,6 +389,65 @@ let pix_metod = {
 		}
 	},
 	
+	bgr332: function()
+	{
+		bpp = 1, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] >> 6 & 3)/3;
+			pix[i++] = 255*(data[j] >> 3 & 7)/7;
+			pix[i++] = 255*(data[j] & 7)/7;
+			pix[i++] = 255;
+		}
+	},
+	
+	rgb233: function()
+	{
+		bpp = 1, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] & 3)/3;
+			pix[i++] = 255*(data[j] >> 2 & 7)/7;
+			pix[i++] = 255*(data[j] >> 5 & 7)/7;
+			pix[i++] = 255;
+		}
+	},
+	
+	bgr233: function()
+	{
+		bpp = 1, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] >> 5 & 7)/7;
+			pix[i++] = 255*(data[j] >> 2 & 7)/7;
+			pix[i++] = 255*(data[j] & 3)/3;
+			pix[i++] = 255;
+		}
+	},
+	
+	rgb323: function()
+	{
+		bpp = 1, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] & 7)/7;
+			pix[i++] = 255*(data[j] >> 3 & 3)/3;
+			pix[i++] = 255*(data[j] >> 5 & 7)/7;
+			pix[i++] = 255;
+		}
+	},
+	
+	bgr323: function()
+	{
+		bpp = 1, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] >> 5 & 7)/7;
+			pix[i++] = 255*(data[j] >> 3 & 3)/3;
+			pix[i++] = 255*(data[j] & 7)/7;
+			pix[i++] = 255;
+		}
+	},
 	
 	rgba2321: function()
 	{
@@ -408,6 +461,18 @@ let pix_metod = {
 		}
 	},
 	
+	bgra2321: function()
+	{
+		bpp = 1, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] >> 5 & 3)/3;
+			pix[i++] = 255*(data[j] >> 2 & 7)/7;
+			pix[i++] = 255*(data[j] & 3)/3;
+			pix[i++] = 255*(data[j] >> 7);
+		}
+	},
+	
 	rgba2222: function()
 	{
 		bpp = 1, bpix_x = 1, bpix_y = 1;
@@ -416,6 +481,18 @@ let pix_metod = {
 			pix[i++] = 255*(data[j] & 3)/3;
 			pix[i++] = 255*(data[j] >> 2 & 3)/3;
 			pix[i++] = 255*(data[j] >> 4 & 3)/3;
+			pix[i++] = 255*(data[j] >> 6 & 3)/3;
+		}
+	},
+	
+	bgra2222: function()
+	{
+		bpp = 1, bpix_x = 1, bpix_y = 1;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			pix[i++] = 255*(data[j] >> 4 & 3)/3;
+			pix[i++] = 255*(data[j] >> 2 & 3)/3;
+			pix[i++] = 255*(data[j] & 3)/3;
 			pix[i++] = 255*(data[j] >> 6 & 3)/3;
 		}
 	},

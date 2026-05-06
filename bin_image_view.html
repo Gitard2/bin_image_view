@@ -18,7 +18,7 @@ Format:
 <option value="pix_24bit">24bit</option>
 <option value="pix_16bit">16bit</option>
 <option value="pix_8bit">8bit</option>
-<option value="pix_notbyte">notbyte</option>
+<option value="pix_notbyte">1-4bit</option>
 <option value="pix_block">block</option>
 </select>
 
@@ -50,7 +50,7 @@ Format:
 <select id='select_format_pix_8bit'>
 <option value="r8">L8</option>
 <option value="r4_8">L4_8</option>
-<option value="palette">palette</option>
+<option value="palette8">palette</option>
 <option value="rgb332">R3G3B2</option>
 <option value="bgr332">B3G3R2</option>
 <option value="rgb233">R2G3B3</option>
@@ -63,7 +63,7 @@ Format:
 <option value="bgra2222">B2G2R2A2</option>
 </select>
 
-<select id='select_format_palette'>
+<select id='select_format_palette8'>
 <option value="vga">VGA</option>
 </select>
 
@@ -71,6 +71,21 @@ Format:
 <option value="r1">L1</option>
 <option value="r2">L2</option>
 <option value="r4">L4</option>
+<option value="palette2">palette2</option>
+<option value="palette4">palette4</option>
+</select>
+
+<select id='select_format_palette2'>
+<option value="cga_0l">CGA_0_low</option>
+<option value="cga_0h">CGA_0_high</option>
+<option value="cga_1l">CGA_1_low</option>
+<option value="cga_1h">CGA_1_high</option>
+<option value="cga_2l">CGA_2_low</option>
+<option value="cga_2h">CGA_2_high</option>
+</select>
+
+<select id='select_format_palette4'>
+<option value="cga">CGA</option>
 </select>
 
 <select id='select_format_pix_block'>
@@ -96,6 +111,7 @@ File:
 Width:
 <input id='width_input' size='4' title=''>
 
+<button id='width_multip'>:1</button>
 <button id='width_minus'>-</button>
 <button id='width_plus'>+</button>
 <button id='width_10minus'>-10</button>
@@ -146,6 +162,7 @@ let bpp, bpix_x, bpix_y;
 let zoom = 1;
 let mouse_dx = 0, mouse_dy = 0;
 let width = 512, height = 512, offset = 0;
+let multip = 1;
 width_input.value = width;
 height_input.value = height;
 offset_input.value = offset;
@@ -208,12 +225,15 @@ let pix_metod = {
 	bgr888: function()
 	{
 		bpp = 3, bpix_x = 1, bpix_y = 1;
+		let align = bpp*width % multip;
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 3)
 		{
 			pix[i++] = data[j + 2];
 			pix[i++] = data[j + 1];
 			pix[i++] = data[j];
 			pix[i++] = 255;
+			if (i/4 % width == 0)
+				j += align;
 		}
 	},
 	
@@ -385,10 +405,10 @@ let pix_metod = {
 		}
 	},
 	
-	palette: function()
+	palette8: function()
 	{
 		bpp = 1, bpix_x = 1, bpix_y = 1;
-		let pal = palettes[select_format_palette.value];
+		let pal = palettes[select_format_palette8.value];
 		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
 		{
 			pix[i++] = pal[data[j]*3];
@@ -559,6 +579,40 @@ let pix_metod = {
 				pix[i + 1] = pix[i];
 				pix[i + 2] = pix[i];
 				pix[i + 3] = 255;
+			}
+		}
+	},
+	
+	palette2: function()
+	{
+		bpp = 1, bpix_x = 4, bpix_y = 1;
+		let pal = palettes[select_format_palette2.value];
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			for (let k = 6; k >= 0 && i < pix.length; k -= 2)
+			{
+				let index = data[j] >> k & 3;
+				pix[i++] = pal[index*3];
+				pix[i++] = pal[index*3 + 1];
+				pix[i++] = pal[index*3 + 2];
+				pix[i++] = 255;
+			}
+		}
+	},
+	
+	palette4: function()
+	{
+		bpp = 1, bpix_x = 2, bpix_y = 1;
+		let pal = palettes[select_format_palette4.value];
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 1)
+		{
+			for (let k = 4; k >= 0 && i < pix.length; k -= 4)
+			{
+				let index = data[j] >> k & 15;
+				pix[i++] = pal[index*3];
+				pix[i++] = pal[index*3 + 1];
+				pix[i++] = pal[index*3 + 2];
+				pix[i++] = 255;
 			}
 		}
 	},
@@ -807,6 +861,13 @@ let pix_metod = {
 function palettes_init()
 {
 	let palettes_str = {
+		cga_0l: "00000000AA00AA0000AA5500",
+		cga_0h: "00000055FF55FF5555FFFF55",
+		cga_1l: "00000000AAAAAA00AAAAAAAA",
+		cga_1h: "00000055FFFFFF55FFFFFFFF",
+		cga_2l: "00000000AAAAAA0000AAAAAA",
+		cga_2h: "00000055FFFFFF5555FFFFFF",
+		cga: "0000000000AA00AA0000AAAAAA0000AA00AAAA5500AAAAAA5555555555FF55FF5555FFFFFF5555FF55FFFFFF55FFFFFF",
 		vga: "0000000000AA00AA0000AAAAAA0000AA00AAAA5500AAAAAA5555555555FF55FF5555FFFFFF5555FF55FFFFFF55FFFFFF0000001414142020202C2C2C383838454545515151616161717171828282929292A2A2A2B6B6B6CBCBCBE3E3E3FFFFFF0000FF4100FF7D00FFBE00FFFF00FFFF00BEFF007DFF0041FF0000FF4100FF7D00FFBE00FFFF00BEFF007DFF0041FF0000FF0000FF4100FF7D00FFBE00FFFF00BEFF007DFF0041FF7D7DFF9E7DFFBE7DFFDF7DFFFF7DFFFF7DDFFF7DBEFF7D9EFF7D7DFF9E7DFFBE7DFFDF7DFFFF7DDFFF7DBEFF7D9EFF7D7DFF7D7DFF9E7DFFBE7DFFDF7DFFFF7DDFFF7DBEFF7D9EFFB6B6FFC7B6FFDBB6FFEBB6FFFFB6FFFFB6EBFFB6DBFFB6C7FFB6B6FFC7B6FFDBB6FFEBB6FFFFB6EBFFB6DBFFB6C7FFB6B6FFB6B6FFC7B6FFDBB6FFEBB6FFFFB6EBFFB6DBFFB6C7FF0000711C007138007155007171007171005571003871001C710000711C007138007155007171005571003871001C710000710000711C007138007155007171005571003871001C713838714538715538716138717138717138617138557138457138387145387155387161387171386171385571384571383871383871453871553871613871713861713855713845715151715951716151716951717151717151697151617151597151517159517161517169517171516971516171515971515171515171595171615171695171715169715161715159710000411000412000413000414100414100304100204100104100004110004120004130004141003041002041001041000041000041100041200041300041410030410020410010412020412820413020413820414120414120384120304120284120204128204130204138204141203841203041202841202041202041282041302041382041412038412030412028412C2C41302C41342C413C2C41412C41412C3C412C34412C30412C2C41302C41342C413C2C41412C3C412C34412C30412C2C412C2C41302C41342C413C2C41412C3C412C34412C3041000000000000000000000000000000000000000000000000",
 	};
 	
@@ -840,6 +901,8 @@ function draw()
 	if (buff)
 	{
 		pix_metod.clear();
+		
+		
 		
 		switch (select_format_pix.value)
 		{
@@ -881,8 +944,10 @@ function select_format_visible()
 	select_format_pix_24bit.style.display = 'none';
 	select_format_pix_16bit.style.display = 'none';
 	select_format_pix_8bit.style.display = 'none';
-	select_format_palette.style.display = 'none';
+	select_format_palette8.style.display = 'none';
 	select_format_pix_notbyte.style.display = 'none';
+	select_format_palette2.style.display = 'none';
+	select_format_palette4.style.display = 'none';
 	select_format_pix_block.style.display = 'none';
 	
 	switch (select_format_pix.value)
@@ -901,12 +966,16 @@ function select_format_visible()
 		
 		case "pix_8bit":
 			select_format_pix_8bit.style.display = 'inline';
-			if (select_format_pix_8bit.value == 'palette')
-				select_format_palette.style.display = 'inline'
+			if (select_format_pix_8bit.value == 'palette8')
+				select_format_palette8.style.display = 'inline';
 			break;
 		
 		case "pix_notbyte":
 			select_format_pix_notbyte.style.display = 'inline';
+			if (select_format_pix_notbyte.value == 'palette2')
+				select_format_palette2.style.display = 'inline';
+			else if (select_format_pix_notbyte.value == 'palette4')
+				select_format_palette4.style.display = 'inline';
 			break;
 		
 		case "pix_block":
@@ -969,6 +1038,17 @@ width_input.oninput = function()
 		resize();
 		draw();
 	}
+}
+
+width_multip.onclick = function()
+{
+	if (multip == 1)
+		multip = 4;
+	else
+		multip = 1;
+	width_multip.innerHTML = ":" + multip;
+	
+	draw();
 }
 
 width_minus.onclick = function()
@@ -1374,7 +1454,23 @@ select_format_pix_8bit.onchange = function()
 	draw();
 }
 
+select_format_palette8.onchange = function()
+{
+	draw();
+}
+
 select_format_pix_notbyte.onchange = function()
+{
+	select_format_visible();
+	draw();
+}
+
+select_format_palette2.onchange = function()
+{
+	draw();
+}
+
+select_format_palette4.onchange = function()
 {
 	draw();
 }

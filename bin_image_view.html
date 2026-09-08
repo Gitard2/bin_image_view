@@ -949,6 +949,7 @@ function select_format_visible()
 	select_format_palette2.style.display = 'none';
 	select_format_palette4.style.display = 'none';
 	select_format_pix_block.style.display = 'none';
+	width_multip.style.display = 'none';
 	
 	switch (select_format_pix.value)
 	{
@@ -958,6 +959,8 @@ function select_format_visible()
 		
 		case "pix_24bit":
 			select_format_pix_24bit.style.display = 'inline';
+			if (select_format_pix_24bit.value == 'bgr888')
+				width_multip.style.display = 'inline';
 			break;
 		
 		case "pix_16bit":
@@ -1226,7 +1229,10 @@ height_end_file.onclick = function()
 {
 	if (data.length - offset > 0)
 	{
-		height = Math.ceil((data.length - offset)/bpp*bpix_x/width)*bpix_y;
+		let bwidth = width*bpp/bpix_x;
+		if (width_multip.style.display == 'inline')
+			bwidth += bwidth % multip;
+		height = Math.ceil((data.length - offset)/bwidth)*bpix_y;
 		height_input.value = height;
 		
 		resize();
@@ -1440,6 +1446,7 @@ select_format_pix_32bit.onchange = function()
 
 select_format_pix_24bit.onchange = function()
 {
+	select_format_visible();
 	draw();
 }
 

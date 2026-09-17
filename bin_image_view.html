@@ -19,6 +19,7 @@ Format:
 <option value="pix_16bit">16bit</option>
 <option value="pix_8bit">8bit</option>
 <option value="pix_notbyte">1-4bit</option>
+<option value="pix_tiles">tiles</option>
 <option value="pix_block">block</option>
 </select>
 
@@ -86,6 +87,13 @@ Format:
 
 <select id='select_format_palette4'>
 <option value="cga">CGA</option>
+</select>
+
+<select id='select_format_pix_tiles'>
+<option value="tile8x8_1">8x8_1bit</option>
+<option value="tile8x8_2">8x8_2bit</option>
+<option value="tile8x8_2_nes">8x8_2bit_NES</option>
+<option value="tile8x8_4">8x8_4bit</option>
 </select>
 
 <select id='select_format_pix_block'>
@@ -617,6 +625,105 @@ let pix_metod = {
 		}
 	},
 	
+	tile8x8_1: function()
+	{
+		bpp = 8, bpix_x = 8, bpix_y = 8;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 8)
+		{
+			for (let h = 0; h < 8; h++)
+			{
+				for (let w = 0; w < 8; w++)
+				{
+					let p = i + 4*(w + h*width);
+					let d = 255*(data[j + h] >> (7 - w) & 1);
+					pix[p++] = d;
+					pix[p++] = d;
+					pix[p++] = d;
+					pix[p] = 255;
+				}
+			}
+			
+			i += 4*8;
+			if (i/4%width == 0)
+				i += 4*(8-1)*width;
+		}
+	},
+	
+	tile8x8_2: function()
+	{
+		bpp = 16, bpix_x = 8, bpix_y = 8;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 16)
+		{
+			for (let h = 0; h < 8; h++)
+			{
+				for (let w = 0; w < 8; w++)
+				{
+					let p = i + 4*(w + h*width);
+					let d = 255*(data[j + 2*h + w/4|0] >> (6 - w%4*2) & 3)/3;
+					pix[p++] = d;
+					pix[p++] = d;
+					pix[p++] = d;
+					pix[p] = 255;
+				}
+			}
+			
+			i += 4*8;
+			if (i/4%width == 0)
+				i += 4*(8-1)*width;
+		}
+	},
+	
+	tile8x8_2_nes: function()
+	{
+		bpp = 16, bpix_x = 8, bpix_y = 8;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 16)
+		{
+			for (let h = 0; h < 8; h++)
+			{
+				for (let w = 0; w < 8; w++)
+				{
+					let p = i + 4*(w + h*width);
+					let k = j + h;
+					let d1 = data[k] >> (7 - w) & 1;
+					let d2 = data[k + 8] >> (7 - w) << 1 & 2;
+					let d = 255*(d1 | d2)/3;
+					pix[p++] = d;
+					pix[p++] = d;
+					pix[p++] = d;
+					pix[p] = 255;
+				}
+			}
+			
+			i += 4*8;
+			if (i/4%width == 0)
+				i += 4*(8-1)*width;
+		}
+	},
+	
+	tile8x8_4: function()
+	{
+		bpp = 32, bpix_x = 8, bpix_y = 8;
+		for (let i = 0, j = offset; i < pix.length && j < data.length; j += 32)
+		{
+			for (let h = 0; h < 8; h++)
+			{
+				for (let w = 0; w < 8; w++)
+				{
+					let p = i + 4*(w + h*width);
+					let d = 255*(data[j + 4*h + w/2|0] >> (4 - w%2*4) & 15)/15;
+					pix[p++] = d;
+					pix[p++] = d;
+					pix[p++] = d;
+					pix[p] = 255;
+				}
+			}
+			
+			i += 4*8;
+			if (i/4%width == 0)
+				i += 4*(8-1)*width;
+		}
+	},
+	
 	dxt1: function()
 	{
 		bpp = 8, bpix_x = 4, bpix_y = 4;
@@ -929,6 +1036,10 @@ function draw()
 			case "pix_block":
 				pix_metod[select_format_pix_block.value]();
 				break;
+			
+			case "pix_tiles":
+				pix_metod[select_format_pix_tiles.value]();
+				break;
 		}
 		
 		if (!ch_alpha.checked)
@@ -949,6 +1060,7 @@ function select_format_visible()
 	select_format_palette2.style.display = 'none';
 	select_format_palette4.style.display = 'none';
 	select_format_pix_block.style.display = 'none';
+	select_format_pix_tiles.style.display = 'none';
 	width_multip.style.display = 'none';
 	
 	switch (select_format_pix.value)
@@ -983,6 +1095,10 @@ function select_format_visible()
 		
 		case "pix_block":
 			select_format_pix_block.style.display = 'inline';
+			break;
+		
+		case "pix_tiles":
+			select_format_pix_tiles.style.display = 'inline';
 			break;
 	}
 }
@@ -1483,6 +1599,11 @@ select_format_palette4.onchange = function()
 }
 
 select_format_pix_block.onchange = function()
+{
+	draw();
+}
+
+select_format_pix_tiles.onchange = function()
 {
 	draw();
 }
